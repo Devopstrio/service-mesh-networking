@@ -4,7 +4,7 @@
 
 <h1>Service Mesh Networking Platform</h1>
 
-<p><strong>The Strategic Infrastructure Control Plane for Secure, Observable, and Policy-Driven Service Communication at Enterprise Scale</strong></p>
+<p><strong>The Strategic Infrastructure Control Plane for Secure, Observable, and Policy-Driven Service Communication at Enterprise Scale.</strong></p>
 
 [![Standard: Service Mesh](https://img.shields.io/badge/Standard-Service--Mesh-blue.svg?style=for-the-badge&labelColor=000000)]()
 [![Status: Production--Ready](https://img.shields.io/badge/Status-Production--Ready-emerald.svg?style=for-the-badge&labelColor=000000)]()
@@ -13,7 +13,7 @@
 <br/>
 
 > **"The network is the application."** 
-> Service Mesh Networking (Mesh-Ops) is an enterprise-grade platform designed to provide a secure, measurable, and highly automated foundation for global service-to-service communication. It orchestrates the complex lifecycle of traffic management, security enforcement, and distributed observability—from L7 traffic routing and automated mTLS encryption to fault injection and real-time telemetry aggregation. By providing a centralized control plane with advanced traffic splitting, identity-based security, and deep service visibility, it enables organizations to eliminate network silos, reduce the blast radius of failures, and ensure consistent communication excellence across every tier of the global infrastructure.
+> **Service Mesh Networking (Mesh-Ops)** is an enterprise-grade platform designed to provide a secure, measurable, and highly automated foundation for global service-to-service communication. It orchestrates the entire lifecycle—from L7 traffic routing and automated mTLS encryption to distributed tracing and fault injection.
 
 </div>
 
@@ -21,419 +21,269 @@
 
 ## 🏛️ Executive Summary
 
-Modern microservice architectures are only as strong as the network that connects them. Organizations fail to maintain stability not because of code bugs, but because of unmanaged network complexity, lack of traffic visibility, and an inability to enforce consistent security policies across thousands of service connections.
+Modern microservice architectures are only as strong as the network that connects them. Organizations often fail to maintain stability not because of code bugs, but because of unmanaged network complexity and a lack of granular visibility into how services interact across distributed clusters.
 
-This platform provides the **Communication Control Plane**. It implements a complete **Mesh Intelligence Framework**—from automated sidecar proxying and L7 traffic management to a specialized zero-trust security model and distributed tracing engine. By operationalizing service networking, it ensures that your services are not just connected, but continuously secured, analyzed for performance, and governed with strategic precision.
+This platform provides the **Communication Control Plane**. It implements a complete **Mesh Intelligence Framework**, enabling SRE and Platform Engineering teams to manage service connectivity as a first-class citizen. By automating sidecar proxying and the enforcement of zero-trust security policies, we ensure that the organizational services are not just connected, but continuously secured, analyzed, and governed with strategic precision.
+
+---
+
+## 📐 Architecture Storytelling: Principal Reference Models
+
+### 1. Principal Architecture: Global Service Mesh & Connectivity Plane
+This diagram illustrates the end-to-end flow from mesh policy definition and XDS distribution to mTLS-encrypted data plane communication and distributed telemetry.
+
+```mermaid
+graph LR
+    %% Subgraph Definitions
+    subgraph ControlPlane["Mesh Control Plane (Istiod/Linkerd)"]
+        direction TB
+        Registry["Service Discovery Registry"]
+        CA["Mesh Certificate Authority (mTLS)"]
+        XDS["XDS Configuration Distributor"]
+        Policy["Network Policy Engine"]
+    end
+
+    subgraph DataPlane["Global Data Plane (Envoy Sidecars)"]
+        direction TB
+        ServiceA["Service A (App + Sidecar)"]
+        ServiceB["Service B (App + Sidecar)"]
+        Ingress["Mesh Ingress Gateway"]
+        Egress["Mesh Egress Gateway"]
+    end
+
+    subgraph ObservabilityHub["Distributed Observability Hub"]
+        direction TB
+        Metrics["Prometheus (Metrics)"]
+        Tracing["Jaeger / Tempo (Traces)"]
+        Visualizer["Kiali / Grafana (Topology)"]
+    end
+
+    subgraph Operations["Mesh Governance & Ops"]
+        direction TB
+        Dash["Mesh Command Dashboard"]
+        Audit["Forensic Traffic Lake"]
+        Canary["Canary Release Manager"]
+    end
+
+    subgraph DevOps["Mesh-as-Code Orchestration"]
+        direction TB
+        GitOps["GitOps Mesh Config"]
+        TF["Terraform Mesh Modules"]
+        Helm["Helm Mesh Charts"]
+    end
+
+    %% Flow Arrows
+    Policy -->|1. Define Policy| XDS
+    Registry -->|2. Track Health| XDS
+    CA -->|3. Issue Certs| DataPlane
+    XDS -->|4. Push Config| DataPlane
+    
+    Ingress -->|5. Route Traffic| ServiceA
+    ServiceA -->|6. mTLS Tunnel| ServiceB
+    ServiceB -->|7. Secure Outbound| Egress
+    
+    DataPlane -->|8. Stream Telemetry| ObservabilityHub
+    ObservabilityHub -->|9. Visualize| Dash
+    Dash -->|10. Orchestrate| Canary
+    
+    GitOps -->|11. Commit Config| XDS
+    TF -->|12. Provision Hub| ControlPlane
+    Dash -->|13. Record Audit| Audit
+
+    %% Styling
+    classDef control fill:#f5f5f5,stroke:#616161,stroke-width:2px;
+    classDef data fill:#ede7f6,stroke:#311b92,stroke-width:2px;
+    classDef obs fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px;
+    classDef ops fill:#fce4ec,stroke:#880e4f,stroke-width:2px;
+    classDef devops fill:#fffde7,stroke:#f57f17,stroke-width:2px;
+
+    class ControlPlane control;
+    class DataPlane data;
+    class ObservabilityHub obs;
+    class Operations ops;
+    class DevOps devops;
+```
+
+### 2. Control Plane vs. Data Plane Orchestration
+Visualizing the separation between policy management and actual traffic interception.
+
+```mermaid
+graph TD
+    CP["Mesh Control Plane"] -->|XDS Stream| ProxyA["Sidecar Proxy (Service A)"]
+    CP -->|XDS Stream| ProxyB["Sidecar Proxy (Service B)"]
+    AppA["Service A Code"] <--> ProxyA
+    ProxyA <-->|mTLS| ProxyB
+    ProxyB <--> AppB["Service B Code"]
+```
+
+### 3. mTLS & Identity-Based Security Flow
+Standardizing trust through automated certificate rotation and SPIFFE-based identities.
+
+```mermaid
+graph LR
+    A["Proxy A (Ident: A)"] -->|Hello + Cert| B["Proxy B (Ident: B)"]
+    B -->|Cert Verification| Trust{"Mesh Trust Root"}
+    Trust -->|Valid| B
+    B -->|Encrypted Data| A
+```
+
+### 4. Advanced Traffic Routing: Canary Deployment
+Using the mesh to split traffic between stable and experimental service versions.
+
+```mermaid
+graph LR
+    Gateway["Mesh Gateway"] -->|VS: Split 90/10| Stable["v1.0 (Stable)"]
+    Gateway --> Canary["v1.1 (Canary)"]
+    Stable --- App1["Prod Workload"]
+    Canary --- App2["Beta Workload"]
+```
+
+### 5. Circuit Breaking & Resilience Patterns
+Proactively protecting the mesh from cascading failures using thresholds and timeouts.
+
+```mermaid
+graph TD
+    Client["Client Proxy"] -->|Request| Server["Server Proxy"]
+    Server -->|Threshold Exceeded| CB{"Circuit Breaker"}
+    CB -->|Open| FailFast["Eject Outlier / 503"]
+    CB -->|Closed| Success["Forward Request"]
+```
+
+### 6. Edge Ingress & Egress Gateway Hub
+Managing the North-South traffic perimeter for entry and exit from the service mesh.
+
+```mermaid
+graph LR
+    User((Public User)) --> Ingress["Ingress Gateway (TLS Term)"]
+    Ingress --> Mesh["Internal Service Mesh"]
+    Mesh --> Egress["Egress Gateway (Policy)"]
+    Egress --> External["External API / Cloud"]
+```
+
+### 7. Service Discovery & Catalog Registry
+Automated detection of service endpoints and continuous health validation.
+
+```mermaid
+graph LR
+    Svc["Service Pod"] --> Reg["Mesh Registry"]
+    Reg -->|Health Check| Svc
+    Reg -->|Active Endpoints| LB["Load Balancing Pool"]
+```
+
+### 8. Identity & RBAC for Mesh Policies
+Enforcing fine-grained communication permissions based on service identity, not IP.
+
+```mermaid
+graph TD
+    Policy["AuthZ Policy"] --> Allowed["Service A -> Service B (Allow)"]
+    Policy --> Denied["Service C -> Service B (Deny)"]
+    Policy --> Admin["Mesh Admin (Policy Management)"]
+```
+
+### 9. Distributed Observability Stack
+The architectural layers for collecting metrics, traces, and logs from every proxy.
+
+```mermaid
+graph LR
+    Envoy["Envoy Proxy"] --> Prometheus["Metrics Store"]
+    Envoy --> Jaeger["Tracing Store"]
+    Envoy --> Fluentd["Logging Store"]
+    Prometheus & Jaeger & Fluentd --> Kiali["Topology Dashboard"]
+```
+
+### 10. IaC Deployment: Mesh-as-Code
+Using Terraform to deploy and manage the lifecycle of the mesh control plane.
+
+```mermaid
+graph LR
+    HCL["Infrastructure Code"] --> TF["Terraform Apply"]
+    TF --> Control["Istio / Linkerd Control Plane"]
+    Control --> Nodes["Injected Cluster Nodes"]
+```
+
+### 11. Metadata Lake for Traffic Forensics
+Storing long-term service interaction data for security auditing and performance analysis.
+
+```mermaid
+graph LR
+    Traffic["Service Call Event"] --> Stream["Forensic Stream"]
+    Stream --> Lake["Traffic Metadata Lake"]
+    Lake --> Trends["Service Interaction Analysis"]
+```
 
 ---
 
 ## 🏛️ Core Mesh Pillars
 
-1. **Intelligent Control Plane**: Centralized hub for managing service identity, routing policies, and configuration distribution.
-2. **High-Performance Data Plane**: Simulated sidecar proxying that handles traffic interception, mTLS, and policy enforcement at the edge.
-3. **L7 Traffic Orchestration**: Advanced routing logic for canary releases, blue/green deployments, and weighted traffic splitting.
-4. **Zero-Trust Security (mTLS)**: Automated encryption and identity-based authentication for every service-to-service interaction.
-5. **Distributed Observability**: Deep visibility into mesh performance through aggregated metrics, traces, and request logs.
-6. **Resilience & Fault Injection**: Proactive testing of service stability through simulated latency and error scenarios.
-
----
-
-## 📐 Architecture Storytelling: 50+ Advanced Diagrams
-
-### 1. The Service Mesh Control Loop
-*The flow from policy definition to data plane enforcement.*
-```mermaid
-graph TD
-    subgraph "Control Plane"
-        Policy[Policy Definition]
-        Config[Config Generator]
-        Dist[XDS Distribution]
-    end
-
-    subgraph "Data Plane (Service A)"
-        ProxyA[Sidecar Proxy]
-        AppA[Application]
-    end
-
-    subgraph "Data Plane (Service B)"
-        ProxyB[Sidecar Proxy]
-        AppB[Application]
-    end
-
-    Policy -->|1. Define| Config
-    Config -->|2. Generate| Dist
-    Dist -->|3. Push| ProxyA
-    Dist -->|3. Push| ProxyB
-    AppA -->|4. Request| ProxyA
-    ProxyA -->|5. mTLS Tunnel| ProxyB
-    ProxyB -->|6. Localhost| AppB
-```
-
-### 2. Traffic Routing Topology: Canary Split
-*Visualizing weighted traffic distribution.*
-```mermaid
-graph LR
-    Gateway[Edge Gateway] -->|100%| Service[Virtual Service]
-    Service -->|90%| V1[Version 1 (Stable)]
-    Service -->|10%| V2[Version 2 (Canary)]
-    V1 --> App1[App Pod]
-    V2 --> App2[App Pod]
-```
-
-### 3. mTLS Handshake & Trust Model
-```mermaid
-graph TD
-    Client[Client Sidecar] -->|1. Hello| Server[Server Sidecar]
-    Server -->|2. Cert + Identity| Client
-    Client -->|3. Verify CA| CA[Mesh CA]
-    CA -->|4. Valid| Client
-    Client -->|5. Encrypted Data| Server
-```
-
-### 4. Mesh Observability Pipeline
-```mermaid
-graph LR
-    Proxy[Sidecar Proxy] -->|Telemetry| Metrics[Prometheus]
-    Proxy -->|Spans| Traces[Jaeger/Tempo]
-    Proxy -->|Logs| Logging[Loki/ELK]
-    Metrics & Traces & Logging --> Dashboard[Mesh Intelligence Hub]
-```
-
-### 5. Deployment Topology: Multi-Cluster Mesh Federation
-```mermaid
-graph LR
-    subgraph "Cluster 1 (Primary)"
-        CP1[Control Plane]
-        GW1[East-West Gateway]
-    end
-    subgraph "Cluster 2 (Remote)"
-        CP2[Control Plane]
-        GW2[East-West Gateway]
-    end
-    GW1 <-->|mTLS Federation| GW2
-```
-
-### 6. Fault Injection Flow
-```mermaid
-graph LR
-    Req[Incoming Request] --> Policy{Abort/Delay?}
-    Policy -->|Abort 10%| Err[503 Service Unavailable]
-    Policy -->|Delay 5s| Latency[Simulated Slow Response]
-    Policy -->|Pass| Success[Successful Interaction]
-```
-
-### 7. Foundation: Multi-Environment Setup
-```mermaid
-graph LR
-    F[Foun] --> M[Mult]
-```
-
-### 8. Networking: Secure Mesh Tunnels
-```mermaid
-graph LR
-    N[Netw] --> S[Secu]
-```
-
-### 9. Component: Control Plane Engine
-```mermaid
-graph LR
-    C[Comp] --> C[Cont]
-```
-
-### 10. Component: Sidecar Proxy Engine
-```mermaid
-graph LR
-    C[Comp] --> S[Side]
-```
-
-### 11. Component: Routing Resolver
-```mermaid
-graph LR
-    C[Comp] --> R[Rout]
-```
-
-### 12. Component: Policy Engine
-```mermaid
-graph LR
-    C[Comp] --> P[Poli]
-```
-
-### 13. Logic: Service Discovery Resolver
-```mermaid
-graph LR
-    L[Logi] --> S[Serv]
-```
-
-### 14. Logic: Weighted Round Robin
-```mermaid
-graph LR
-    L[Logi] --> W[Weig]
-```
-
-### 15. Logic: Certificate Rotation
-```mermaid
-graph LR
-    L[Logi] --> C[Cert]
-```
-
-### 16. Logic: Fault Probability Handler
-```mermaid
-graph LR
-    L[Logi] --> F[Faul]
-```
-
-### 17. Architecture: Global Mesh Plane
-```mermaid
-graph LR
-    A[Arch] --> G[Glob]
-```
-
-### 18. Architecture: Event-Driven Routing
-```mermaid
-graph LR
-    A[Arch] --> E[Even]
-```
-
-### 19. Architecture: Distributed Telemetry Hub
-```mermaid
-graph LR
-    A[Arch] --> D[Dist]
-```
-
-### 20. Pattern: Traffic-as-Code
-```mermaid
-graph LR
-    P[Patt] --> T[Traf]
-```
-
-### 21. Pattern: Sidecar Injection Model
-```mermaid
-graph LR
-    P[Patt] --> S[Side]
-```
-
-### 22. Pattern: Gateway Aggregation
-```mermaid
-graph LR
-    P[Patt] --> G[Gate]
-```
-
-### 23. Security: SPIFFE Identity Model
-```mermaid
-graph LR
-    S[Secu] --> S[SPIF]
-```
-
-### 24. Security: L7 Access Control
-```mermaid
-graph LR
-    S[Secu] --> L[L7 A]
-```
-
-### 25. Security: Secure Audit Record
-```mermaid
-graph LR
-    S[Secu] --> S[Secu]
-```
-
-### 26. Feature: Service Topology Graph
-```mermaid
-graph LR
-    F[Feat] --> S[Serv]
-```
-
-### 27. Feature: Canary Deployment Dashboard
-```mermaid
-graph LR
-    F[Feat] --> C[Cana]
-```
-
-### 28. Feature: Auto-generated Trace Report
-```mermaid
-graph LR
-    F[Feat] --> A[Auto]
-```
-
-### 29. Compliance: PCI-DSS Traffic Isolation
-```mermaid
-graph LR
-    C[Comp] --> P[PCI]
-```
-
-### 30. Compliance: HIPAA Secure Transit
-```mermaid
-graph LR
-    C[Comp] --> H[HIPA]
-```
-
-### 31. Infrastructure: Redis Policy Cache
-```mermaid
-graph LR
-    I[Infr] --> R[Redi]
-```
-
-### 32. Infrastructure: Postgres Registry DB
-```mermaid
-graph LR
-    I[Infr] --> P[Post]
-```
-
-### 33. Deployment: Kubernetes Mesh Pods
-```mermaid
-graph LR
-    D[Depl] --> K[Kube]
-```
-
-### 34. Deployment: Multi-Cluster Gateway Sync
-```mermaid
-graph LR
-    D[Depl] --> M[Mult]
-```
-
-### 35. Monitoring: Success Rate (SR) KPI
-```mermaid
-graph LR
-    M[Moni] --> S[Succ]
-```
-
-### 36. Monitoring: Latency Distribution
-```mermaid
-graph LR
-    M[Moni] --> L[Late]
-```
-
-### 37. UI: Mesh Dashboard View
-```mermaid
-graph LR
-    U[UI] --> M[Mesh]
-```
-
-### 38. UI: Traffic Splitting Pane
-```mermaid
-graph LR
-    U[UI] --> T[Traf]
-```
-
-### 39. UI: Security Compliance Graph
-```mermaid
-graph LR
-    U[UI] --> S[Secu]
-```
-
-### 40. UI: Distributed Trace View
-```mermaid
-graph LR
-    U[UI] --> D[Dist]
-```
-
-### 41. CI/CD: Mesh config validation
-```mermaid
-graph LR
-    C[CICD] --> M[Mesh]
-```
-
-### 42. CI/CD: Trace analysis pipeline
-```mermaid
-graph LR
-    C[CICD] --> T[Trac]
-```
-
-### 43. Strategy: Fail-Safe Networking
-```mermaid
-graph LR
-    S[Stra] --> F[Fail]
-```
-
-### 44. Strategy: Observability-First Design
-```mermaid
-graph LR
-    S[Stra] --> O[Obse]
-```
-
-### 45. Feature: Multi-Cluster Routing Support
-```mermaid
-graph LR
-    F[Feat] --> M[Mult]
-```
-
-### 46. Feature: Resilience Scorecard
-```mermaid
-graph LR
-    F[Feat] --> R[Resi]
-```
-
-### 47. Feature: Policy Impact Simulator
-```mermaid
-graph LR
-    F[Feat] --> P[Poli]
-```
-
-### 48. Logic: Circuit Breaker Solver
-```mermaid
-graph LR
-    L[Logi] --> C[Circ]
-```
-
-### 49. Data Model: Mesh Service Entity
-```mermaid
-graph LR
-    D[Data] --> M[Mesh]
-```
-
-### 50. Enterprise Mesh Excellence
-```mermaid
-graph LR
-    E[Entr] --> M[Mesh]
-```
+1.  **Intelligent Control Plane**: Centralized hub for managing service identity, routing policies, and configuration distribution.
+2.  **High-Performance Data Plane**: Simulated sidecar proxying that handles traffic interception and mTLS enforcement.
+3.  **L7 Traffic Orchestration**: Advanced routing logic for canary releases, blue/green deployments, and weighted splitting.
+4.  **Zero-Trust Security (mTLS)**: Automated encryption and identity-based authentication for every service-to-service interaction.
+5.  **Distributed Observability**: Deep visibility into mesh performance through aggregated metrics, traces, and request logs.
+6.  **Resilience & Fault Injection**: Proactive testing of service stability through simulated latency and error scenarios.
 
 ---
 
 ## 🛠️ Technical Stack & Implementation
 
 ### Mesh Engine & APIs
-- **Framework**: Python 3.11+ / FastAPI.
-- **Control Plane**: Service registry and XDS configuration distributor.
-- **Data Plane**: Simulated L7 proxy with mTLS and traffic splitting logic.
-- **Policy Engine**: RBAC and rate-limiting enforcement logic.
-- **Cache**: Redis for high-speed policy lookups and telemetry aggregation.
-- **Persistence**: PostgreSQL for mesh topology, service registry, and audit trails.
-- **Identity**: SPIFFE-based identity simulation with OIDC / JWT support.
+*   **Framework**: Python 3.11+ / FastAPI.
+*   **Control Plane**: Service registry and XDS configuration distributor for Envoy proxies.
+*   **Data Plane**: Simulated L7 proxy logic with mTLS and traffic splitting support.
+*   **Policy Engine**: Strategic RBAC and rate-limiting enforcement for microservices.
+*   **State Management**: PostgreSQL (Mesh Topology) and Redis (Telemetry Cache).
 
-### Frontend (Mesh Dashboard)
-- **Framework**: React 18 / Vite.
-- **Theme**: Teal / Slate (Modern Networking & SRE aesthetic).
-- **Visualization**: Recharts for traffic throughput and latency heatmaps.
+### Mesh Dashboard (UI)
+*   **Framework**: React 18 / Vite.
+*   **Theme**: Teal / Slate (Modern Networking & SRE aesthetic).
+*   **Visualization**: Recharts for traffic throughput trendlines and latency heatmaps.
 
-### Infrastructure
-- **Runtime**: AWS EKS (Kubernetes).
-- **Deployment**: Helm charts for mesh control plane and proxy distributions.
-- **IaC**: Terraform (Modular with Mesh focus).
+### Infrastructure & DevOps
+*   **Runtime**: AWS EKS or Azure Kubernetes Service (AKS).
+*   **IaC**: Modular Terraform for deploying the mesh control plane and gateway configurations.
+
+---
+
+## 🏗️ IaC Mapping (Module Structure)
+
+| Module | Purpose | Real Services |
+| :--- | :--- | :--- |
+| **`infrastructure/control-plane`** | Central mesh management | EKS, Istio, Linkerd, Consul |
+| **`infrastructure/gateways`** | Ingress and Egress control | Envoy, NGINX, Gateway API |
+| **`infrastructure/security`** | Identity and mTLS roots | SPIRE, Cert-Manager, Vault |
+| **`infrastructure/observability`** | Telemetry and tracing sinks | Prometheus, Jaeger, Kiali |
 
 ---
 
 ## 🚀 Deployment Guide
 
-### Local Development
+### Local Principal Environment
 ```bash
-# Clone the repository
+# Clone the service mesh platform
 git clone https://github.com/devopstrio/service-mesh-networking.git
 cd service-mesh-networking
 
-# Setup environment
+# Configure environment
 cp .env.example .env
 
-# Launch the Mesh stack (API, CP, DB, Redis, UI)
+# Launch the Mesh stack
 make up
 
 # Run a sample traffic simulation
 make simulate-traffic
 
-# Apply a global mesh policy
+# Apply a global mesh routing policy
 make apply-policy
 ```
+
 Access the Service Mesh Dashboard at `http://localhost:3000`.
 
 ---
 
 ## 📜 License
 Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+<div align="center">
+  <p>© 2026 Devopstrio. All rights reserved.</p>
+</div>
